@@ -18,7 +18,7 @@ description = "A pure-Rust implementation of Bulletproofs using Ristretto"
 edition = "2018"
 
 [dependencies]
-curve25519-dalek = { version = "3", default-features = false, features = ["serde", "alloc", "u64_backend"] }
+curve25519-dalek = { git = "https://github.com/FindoraNetwork/curve25519-dalek", tag = "v3.2.0-f", default-features = false, features = ["serde", "alloc", "u64_backend"] }
 subtle = { version = "2", default-features = false }
 sha3 = { version = "0.10", default-features = false }
 digest = { version = "0.10", default-features = false }
@@ -62,6 +62,3 @@ harness = false
 name = "r1cs"
 harness = false
 required-features = ["yoloproofs"]
-
-[patch.crates-io]
-curve25519-dalek = { git = "https://github.com/FindoraNetwork/curve25519-dalek" }
