@@ -13,16 +13,16 @@ use criterion::Criterion;
 // someone wants to figure a way to use #[path] attributes or
 // something to avoid the duplication.
 
-extern crate bulletproofs;
 extern crate curve25519_dalek;
 extern crate merlin;
+extern crate noah_bulletproofs;
 extern crate rand;
 
-use bulletproofs::r1cs::*;
-use bulletproofs::{BulletproofGens, PedersenGens};
 use curve25519_dalek::ristretto::CompressedRistretto;
 use curve25519_dalek::scalar::Scalar;
 use merlin::Transcript;
+use noah_bulletproofs::r1cs::*;
+use noah_bulletproofs::{BulletproofGens, PedersenGens};
 use rand::seq::SliceRandom;
 use rand::Rng;
 
@@ -175,7 +175,7 @@ fn bench_kshuffle_prove(c: &mut Criterion) {
             let mut rng = rand::thread_rng();
             let (min, max) = (0u64, u64::MAX);
             let input: Vec<Scalar> = (0..*k)
-                .map(|_| Scalar::from(rng.gen_range(min, max)))
+                .map(|_| Scalar::from(rng.gen_range(min..max)))
                 .collect();
             let mut output = input.clone();
             output.shuffle(&mut rand::thread_rng());
@@ -217,7 +217,7 @@ fn bench_kshuffle_verify(c: &mut Criterion) {
                 let mut rng = rand::thread_rng();
                 let (min, max) = (0u64, u64::MAX);
                 let input: Vec<Scalar> = (0..*k)
-                    .map(|_| Scalar::from(rng.gen_range(min, max)))
+                    .map(|_| Scalar::from(rng.gen_range(min..max)))
                     .collect();
                 let mut output = input.clone();
                 output.shuffle(&mut rand::thread_rng());

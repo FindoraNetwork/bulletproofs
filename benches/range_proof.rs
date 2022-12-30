@@ -10,8 +10,8 @@ use curve25519_dalek::scalar::Scalar;
 
 use merlin::Transcript;
 
-use bulletproofs::RangeProof;
-use bulletproofs::{BulletproofGens, PedersenGens};
+use noah_bulletproofs::RangeProof;
+use noah_bulletproofs::{BulletproofGens, PedersenGens};
 
 static AGGREGATION_SIZES: [usize; 6] = [1, 2, 4, 8, 16, 32];
 
@@ -26,7 +26,7 @@ fn create_aggregated_rangeproof_helper(n: usize, c: &mut Criterion) {
             let mut rng = rand::thread_rng();
 
             let (min, max) = (0u64, ((1u128 << n) - 1) as u64);
-            let values: Vec<u64> = (0..m).map(|_| rng.gen_range(min, max)).collect();
+            let values: Vec<u64> = (0..m).map(|_| rng.gen_range(min..max)).collect();
             let blindings: Vec<Scalar> = (0..m).map(|_| Scalar::random(&mut rng)).collect();
 
             b.iter(|| {
@@ -74,7 +74,7 @@ fn verify_aggregated_rangeproof_helper(n: usize, c: &mut Criterion) {
             let mut rng = rand::thread_rng();
 
             let (min, max) = (0u64, ((1u128 << n) - 1) as u64);
-            let values: Vec<u64> = (0..m).map(|_| rng.gen_range(min, max)).collect();
+            let values: Vec<u64> = (0..m).map(|_| rng.gen_range(min..max)).collect();
             let blindings: Vec<Scalar> = (0..m).map(|_| Scalar::random(&mut rng)).collect();
 
             let mut transcript = Transcript::new(b"AggregateRangeProofBenchmark");

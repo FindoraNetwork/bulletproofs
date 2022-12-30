@@ -1,11 +1,11 @@
 [package]
-name = "bulletproofs"
+name = "noah-bulletproofs"
 # Before doing a release:
 # - update version field 
 # - update html_root_url
 # - ensure yoloproofs was disabled in an atomic (revertable) commit
 # - update CHANGELOG
-version = "2.0.0"
+version = "4.0.0"
 authors = ["Cathie Yun <cathieyun@gmail.com>", 
            "Henry de Valence <hdevalence@hdevalence.ca>",
            "Oleg Andreev <oleganza@gmail.com>"]
@@ -18,7 +18,7 @@ description = "A pure-Rust implementation of Bulletproofs using Ristretto"
 edition = "2018"
 
 [dependencies]
-curve25519-dalek = { git = "https://github.com/FindoraNetwork/curve25519-dalek", tag = "v3.2.0-f", default-features = false, features = ["serde", "alloc", "u64_backend"] }
+curve25519-dalek = { package = "noah-curve25519-dalek", version = "4.0.0", default-features = false, features = ["serde", "alloc", "u64_backend"] }
 subtle = { version = "2", default-features = false }
 sha3 = { version = "0.10", default-features = false }
 digest = { version = "0.10", default-features = false }
