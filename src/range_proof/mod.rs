@@ -90,8 +90,8 @@ impl RangeProof {
     /// extern crate merlin;
     /// use merlin::Transcript;
     ///
-    /// extern crate bulletproofs;
-    /// use bulletproofs::{BulletproofGens, PedersenGens, RangeProof};
+    /// extern crate noah_bulletproofs;
+    /// use noah_bulletproofs::{BulletproofGens, PedersenGens, RangeProof};
     ///
     /// # fn main() {
     /// // Generators for Pedersen commitments.  These can be selected
@@ -189,8 +189,8 @@ impl RangeProof {
     /// extern crate merlin;
     /// use merlin::Transcript;
     ///
-    /// extern crate bulletproofs;
-    /// use bulletproofs::{BulletproofGens, PedersenGens, RangeProof};
+    /// extern crate noah_bulletproofs;
+    /// use noah_bulletproofs::{BulletproofGens, PedersenGens, RangeProof};
     ///
     /// # fn main() {
     /// // Generators for Pedersen commitments.  These can be selected
