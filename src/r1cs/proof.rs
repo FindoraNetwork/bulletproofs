@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 //! Definition of the proof struct.
 
+use alloc::vec::Vec;
 use curve25519_dalek::ristretto::CompressedRistretto;
 use curve25519_dalek::scalar::Scalar;
 use curve25519_dalek::traits::{Identity, IsIdentity};
