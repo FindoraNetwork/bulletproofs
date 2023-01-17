@@ -6,7 +6,7 @@ extern crate rand;
 
 #[cfg(feature = "std")]
 use self::rand::thread_rng;
-use alloc::vec::Vec;
+use alloc::{vec, vec::Vec};
 
 use curve25519_dalek::ristretto::{CompressedRistretto, RistrettoPoint};
 use curve25519_dalek::scalar::Scalar;
@@ -19,11 +19,11 @@ use crate::inner_product_proof::InnerProductProof;
 use crate::transcript::TranscriptProtocol;
 use crate::util;
 
+use core::iter;
+use core::ops::AddAssign;
 use rand_core::{CryptoRng, RngCore};
 use serde::de::Visitor;
 use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
-use std::iter;
-use std::ops::AddAssign;
 
 // Modules for MPC protocol
 
@@ -503,7 +503,7 @@ impl RangeProof {
                 n,
                 rng,
             )?;
-            let mut rng = transcript.build_rng().finalize(&mut thread_rng());
+            let mut rng = transcript.build_rng().finalize(rng);
             random_scalars.push(Scalar::random(&mut rng));
             all_scalars.push((instance_scalars, value_commitment.len()));
         }

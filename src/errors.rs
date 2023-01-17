@@ -1,7 +1,7 @@
 //! Errors related to proving and verifying proofs.
 
 extern crate alloc;
-use alloc::vec::Vec;
+use alloc::{string::String, vec::Vec};
 
 #[cfg(feature = "std")]
 use thiserror::Error;
