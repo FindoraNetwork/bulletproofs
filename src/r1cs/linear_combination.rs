@@ -1,8 +1,9 @@
 //! Definition of linear combinations.
 
+use alloc::{vec, vec::Vec};
+use core::iter::FromIterator;
+use core::ops::{Add, Mul, Neg, Sub};
 use curve25519_dalek::scalar::Scalar;
-use std::iter::FromIterator;
-use std::ops::{Add, Mul, Neg, Sub};
 
 /// Represents a variable in a constraint system.
 #[derive(Copy, Clone, Debug, PartialEq)]

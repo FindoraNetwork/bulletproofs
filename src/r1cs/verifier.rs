@@ -1,11 +1,13 @@
 #![allow(non_snake_case)]
 
+use alloc::{boxed::Box, vec, vec::Vec};
 use core::borrow::BorrowMut;
 use core::mem;
 use curve25519_dalek::ristretto::{CompressedRistretto, RistrettoPoint};
 use curve25519_dalek::scalar::Scalar;
 use curve25519_dalek::traits::{Identity, MultiscalarMul, VartimeMultiscalarMul};
 use merlin::Transcript;
+use rand_core::{CryptoRng, RngCore};
 
 use super::{
     ConstraintSystem, LinearCombination, R1CSProof, RandomizableConstraintSystem,
@@ -15,7 +17,6 @@ use super::{
 use crate::errors::R1CSError;
 use crate::generators::{BulletproofGens, PedersenGens};
 use crate::transcript::TranscriptProtocol;
-use rand_core::{CryptoRng, RngCore};
 
 /// A [`ConstraintSystem`] implementation for use by the verifier.
 ///
@@ -341,8 +342,9 @@ impl<T: BorrowMut<Transcript>> Verifier<T> {
     // T_1, T3, T4, T5, T6
     // proof.ipp_proof.L_vec.iter().map(|L_i| L_i.decompress()))
     // proof.ipp_proof.R_vec
-    pub(super) fn verification_scalars(
+    pub(super) fn verification_scalars<R: RngCore + CryptoRng>(
         mut self,
+        rng: &mut R,
         proof: &R1CSProof,
         bp_gens: &BulletproofGens,
     ) -> Result<(Self, Vec<Scalar>), R1CSError> {
@@ -371,7 +373,7 @@ impl<T: BorrowMut<Transcript>> Verifier<T> {
 
         use crate::inner_product_proof::inner_product;
         use crate::util;
-        use std::iter;
+        use core::iter;
 
         if bp_gens.gens_capacity < padded_n {
             return Err(R1CSError::InvalidGeneratorsLength);
@@ -451,12 +453,7 @@ impl<T: BorrowMut<Transcript>> Verifier<T> {
         // Create a `TranscriptRng` from the transcript. The verifier
         // has no witness data to commit, so this just mixes external
         // randomness into the existing transcript.
-        use rand::thread_rng;
-        let mut rng = self
-            .transcript
-            .borrow_mut()
-            .build_rng()
-            .finalize(&mut thread_rng());
+        let mut rng = self.transcript.borrow_mut().build_rng().finalize(rng);
         let r = Scalar::random(&mut rng);
 
         let xx = x * x;
@@ -487,23 +484,25 @@ impl<T: BorrowMut<Transcript>> Verifier<T> {
     /// [`BulletproofGens`] should have `gens_capacity` greater than
     /// the number of multiplication constraints that will eventually
     /// be added into the constraint system.
-    pub fn verify(
+    pub fn verify<R: RngCore + CryptoRng>(
         self,
+        rng: &mut R,
         proof: &R1CSProof,
         pc_gens: &PedersenGens,
         bp_gens: &BulletproofGens,
     ) -> Result<(), R1CSError> {
-        self.verify_and_return_transcript(proof, pc_gens, bp_gens)
+        self.verify_and_return_transcript(rng, proof, pc_gens, bp_gens)
             .map(|_| ())
     }
     /// Same as `verify`, but also returns the transcript back to the user.
-    pub fn verify_and_return_transcript(
+    pub fn verify_and_return_transcript<R: RngCore + CryptoRng>(
         mut self,
+        rng: &mut R,
         proof: &R1CSProof,
         pc_gens: &PedersenGens,
         bp_gens: &BulletproofGens,
     ) -> Result<T, R1CSError> {
-        let (verifier, scalars) = self.verification_scalars(proof, bp_gens)?;
+        let (verifier, scalars) = self.verification_scalars(rng, proof, bp_gens)?;
         self = verifier;
         let T_points = [proof.T_1, proof.T_3, proof.T_4, proof.T_5, proof.T_6];
 
@@ -512,7 +511,7 @@ impl<T: BorrowMut<Transcript>> Verifier<T> {
 
         let padded_n = self.num_vars.next_power_of_two();
 
-        use std::iter;
+        use core::iter;
         let mega_check = RistrettoPoint::optional_multiscalar_mul(
             scalars,
             iter::once(Some(pc_gens.B))
@@ -558,7 +557,7 @@ where
     let mut verification_scalars = vec![];
     for (verifier, proof) in instances.into_iter() {
         // verification_scalars method is mutable, need to run before obtaining verifier.num_vars
-        let (verifier, scalars) = verifier.verification_scalars(proof, bp_gens)?;
+        let (verifier, scalars) = verifier.verification_scalars(prng, proof, bp_gens)?;
         let n = verifier.num_vars.next_power_of_two();
         if n > max_n_padded {
             max_n_padded = n;
