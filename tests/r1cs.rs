@@ -84,6 +84,7 @@ impl ShuffleProof {
         let k = input.len();
         transcript.append_message(b"dom-sep", b"ShuffleProof");
         transcript.append_u64(b"k", k as u64);
+        let mut rng = rand::thread_rng();
 
         let mut prover = Prover::new(&pc_gens, transcript);
 
@@ -103,7 +104,7 @@ impl ShuffleProof {
 
         ShuffleProof::gadget(&mut prover, input_vars, output_vars)?;
 
-        let proof = prover.prove(&bp_gens)?;
+        let proof = prover.prove(&mut rng, &bp_gens)?;
 
         Ok((ShuffleProof(proof), input_commitments, output_commitments))
     }
@@ -124,6 +125,7 @@ impl ShuffleProof {
         let k = input_commitments.len();
         transcript.append_message(b"dom-sep", b"ShuffleProof");
         transcript.append_u64(b"k", k as u64);
+        let mut rng = rand::thread_rng();
 
         let mut verifier = Verifier::new(transcript);
 
@@ -139,7 +141,7 @@ impl ShuffleProof {
 
         ShuffleProof::gadget(&mut verifier, input_vars, output_vars)?;
 
-        verifier.verify(&self.0, &pc_gens, &bp_gens)?;
+        verifier.verify(&mut rng, &self.0, &pc_gens, &bp_gens)?;
         Ok(())
     }
 }
@@ -250,6 +252,7 @@ fn example_gadget_proof(
     c2: u64,
 ) -> Result<(R1CSProof, Vec<CompressedRistretto>), R1CSError> {
     let mut transcript = Transcript::new(b"R1CSExampleGadget");
+    let mut rng = thread_rng();
 
     // 1. Create a prover
     let mut prover = Prover::new(pc_gens, &mut transcript);
@@ -272,7 +275,7 @@ fn example_gadget_proof(
     );
 
     // 4. Make a proof
-    let proof = prover.prove(bp_gens)?;
+    let proof = prover.prove(&mut rng, bp_gens)?;
 
     Ok((proof, commitments))
 }
@@ -285,6 +288,7 @@ fn example_gadget_verify(
     proof: R1CSProof,
     commitments: Vec<CompressedRistretto>,
 ) -> Result<(), R1CSError> {
+    let mut rng = thread_rng();
     let mut transcript = Transcript::new(b"R1CSExampleGadget");
 
     // 1. Create a verifier
@@ -306,7 +310,7 @@ fn example_gadget_verify(
 
     // 4. Verify the proof
     verifier
-        .verify(&proof, &pc_gens, &bp_gens)
+        .verify(&mut rng, &proof, &pc_gens, &bp_gens)
         .map_err(|_| R1CSError::VerificationError)
 }
 
@@ -423,19 +427,19 @@ fn range_proof_helper(v_val: u64, n: usize) -> Result<(), R1CSError> {
     // Common
     let pc_gens = PedersenGens::default();
     let bp_gens = BulletproofGens::new(128, 1);
+    let mut rng = rand::thread_rng();
 
     // Prover's scope
     let (proof, commitment) = {
         // Prover makes a `ConstraintSystem` instance representing a range proof gadget
         let mut prover_transcript = Transcript::new(b"RangeProofTest");
-        let mut rng = rand::thread_rng();
 
         let mut prover = Prover::new(&pc_gens, &mut prover_transcript);
 
         let (com, var) = prover.commit(v_val.into(), Scalar::random(&mut rng));
         assert!(range_proof(&mut prover, var.into(), Some(v_val), n).is_ok());
 
-        let proof = prover.prove(&bp_gens)?;
+        let proof = prover.prove(&mut rng, &bp_gens)?;
 
         (proof, com)
     };
@@ -450,7 +454,7 @@ fn range_proof_helper(v_val: u64, n: usize) -> Result<(), R1CSError> {
     assert!(range_proof(&mut verifier, var.into(), None, n).is_ok());
 
     // Verifier verifies proof
-    verifier.verify(&proof, &pc_gens, &bp_gens)
+    verifier.verify(&mut rng, &proof, &pc_gens, &bp_gens)
 }
 
 #[test]
@@ -504,7 +508,7 @@ fn batch_range_proof_helper(v_vals: &[(u64, usize)]) -> Result<(), R1CSError> {
             let (com, var) = prover.commit(Scalar::from(*v), Scalar::random(&mut rng));
             assert!(range_proof(&mut prover, var.into(), Some(*v), *n).is_ok());
 
-            let proof = prover.prove(&bp_gens)?;
+            let proof = prover.prove(&mut rng, &bp_gens)?;
             (proof, com)
         };
         range_bound.push(*n);
